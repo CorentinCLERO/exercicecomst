@@ -1,0 +1,31 @@
+.header {
+    background-color: darkolivegreen;
+    height: 40px;
+    display: flex;
+    justify-content: space-around;
+}
+
+.form {
+    padding: 10px;
+}
+
+.buttonform {
+    margin: 10px;
+}
+
+.no-underline {
+    text-decoration: none;
+    color: inherit;
+    background-color: beige;
+    margin: 5px;
+    border-radius: 10px;
+}
+
+.button {
+    margin: 20px;
+    vertical-align: middle;
+}
+
+.attention {
+    color: red;
+}
