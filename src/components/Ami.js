@@ -15,7 +15,7 @@ const Ami = ({ ami, icone, publique, listedamis, comptePublic }) => {
             {montrerInfosPublique && comptePublic && (
                 <span>
                     <div className='form'>Amis de {ami} : </div>
-                    {listedamis.split(',').map((ami, index) => (
+                    {listedamis.map((ami, index) => (
                         <div key={index}>
                             <div className='form'>- {ami}</div>
                         </div>

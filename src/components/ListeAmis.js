@@ -18,9 +18,10 @@ const ListeAmis = ({ listeAmis }) => {
                     const response = await axios.get(`http://localhost:8080/api/utilisateurs?pseudo=${ami}`);
                     const etatConnexion = response.data[0].etatconnexion;
                     const comptePublic = response.data[0].publique;
-                    let listedamis = ""
+                    let listedamis = []
                     if (comptePublic === true) {
-                        listedamis = response.data[0].listeamis
+                        listedamis = response.data[0].leslistemamis.map((listeami) => listeami.pseudoAmi);
+                        console.log(listedamis)
                     }
 
                     let icone;
@@ -76,8 +77,8 @@ const ListeAmis = ({ listeAmis }) => {
 
         // Déclencher fetchAmisConnexion toutes les 2 secondes
         const intervalId = setInterval(() => {
+            fetchAmisConnexion();
         }, 2000);
-        fetchAmisConnexion();
 
         // Nettoyer l'intervalle lorsque le composant est démonté
         return () => clearInterval(intervalId);
