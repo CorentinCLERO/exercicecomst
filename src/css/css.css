@@ -29,3 +29,11 @@
 .attention {
     color: red;
 }
+
+.valider {
+    color: green;
+}
+
+.serveurerreur {
+    color: grey;
+}

@@ -12,9 +12,10 @@ const Accueil = ({ compte, setCompte }) => {
     const [pseudoNonValide, setPseudoNonValide] = useState(false);
     const [rechargementDonnees, setRechargementDonnees] = useState(false);
     const [message, setMessage] = useState('');
-    const [listeAmis, setListeAmis] = useState('');
-    const [requeteAmis, setRequeteAmis] = useState('');
-    const [demandeAmis, setDemandeAmis] = useState('');
+    const [statusRequete, setStatusRequete] = useState(0);
+    const [listeAmis, setListeAmis] = useState([]);
+    const [requeteAmis, setRequeteAmis] = useState([]);
+    const [demandeAmis, setDemandeAmis] = useState([]);
 
     const deconnexion = () => {
         axios.put(`http://localhost:8080/api/utilisateurs/${compte.id}`, {
@@ -49,66 +50,29 @@ const Accueil = ({ compte, setCompte }) => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        const trimmedPseudo = pseudo.trim();
-
-        if (trimmedPseudo.length === 0) {
-            setPseudoNonValide(true)
-            return;
-        }
-
         const data = {
-            pseudo: trimmedPseudo
+            pseudoaajouter: pseudo,
+            pseudoutilisateur: compte.pseudo,
+            idutilisateur: compte.id
         };
 
-        axios.get(`http://localhost:8080/api/utilisateurs/${compte.id}`)
+        axios.post(`http://localhost:8080/api/utilisateurs/demandeamis`, data)
             .then(response => {
-                console.log('Réponse de la requête GET :', response.data);
-                const listAmis = response.data["listeamis"] ? response.data["listeamis"].split(',') : [];
-                if (listAmis.includes(data.pseudo)) {
-                    setMessage(`${data.pseudo} est déjà votre ami`)
-                } else if (data.pseudo === compte.pseudo) {
-                    setMessage("Ceci est votre pseudo")
-                } else {
-                    axios.get(`http://localhost:8080/api/utilisateurs?pseudo=${data.pseudo}`)
-                        .then(response => {
-                            console.log('Réponse de la requête GET :', response.data);
-                            if (response.data.length > 0) {
-                                axios.put(`http://localhost:8080/api/utilisateurs/amis/${compte.id}`, {
-                                    champ: "requeteamis",
-                                    nouvelleValeur: data.pseudo,
-                                    type: "add"
-                                })
-                                    .then(response => {
-                                        setMessage(response.data.message);
-                                        setRechargementDonnees(!rechargementDonnees);
-                                    })
-                                    .catch(error => {
-                                        console.error('Erreur de la requête PUT :', error);
-                                    });
-                                axios.put(`http://localhost:8080/api/utilisateurs/amis/${response.data[0].id}`, {
-                                    champ: "demandeamis",
-                                    nouvelleValeur: compte.pseudo,
-                                    type: "add"
-                                })
-                                    .then(response => {
-                                        console.log('Réponse de la requête PUT :', response.data);
-                                        setRechargementDonnees(!rechargementDonnees);
-                                    })
-                                    .catch(error => {
-                                        console.error('Erreur de la requête PUT :', error);
-                                    });
-                            } else {
-                                setPseudoDemandeAmis(true)
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Erreur de la requête GET :', error);
-                        });
-                }
-
+                setMessage(response.data.message);
+                setStatusRequete(response.status);
+                setRechargementDonnees(!rechargementDonnees);
             })
             .catch(error => {
-                console.error('Erreur de la requête GET :', error);
+                if (error.response) {
+                    setMessage(error.response.data.message);
+                    setStatusRequete(error.response.status);
+                } else if (error.request) {
+                    // La requête a été effectuée mais il n'y a pas eu de réponse du serveur
+                    console.log("Erreur de la requête, pas de réponse du serveur.");
+                } else {
+                    // Une erreur s'est produite lors de la préparation de la requête
+                    console.error("Erreur lors de la préparation de la requête :", error.message);
+                }
             });
     }
 
@@ -123,14 +87,16 @@ const Accueil = ({ compte, setCompte }) => {
         if (compte && compte.id) {
             axios.get(`http://localhost:8080/api/utilisateurs/${compte.id}`)
                 .then(response => {
-                    console.log('Réponse de la requête GET :', response.data);
+                    console.log('Réponse de la requête GET rechargement data:', response.data);
                     const data = response.data;
 
                     if (data) {
-                        setListeAmis(data.listeamis)
-                        setDemandeAmis(data.demandeamis)
-                        setRequeteAmis(data.requeteamis)
+                        setListeAmis(data[0].leslistemamis.map((listeami) => listeami.pseudoAmi));
+                        setDemandeAmis(data[0].lesdemandeamis.map((demandeami) => demandeami.pseudoAmi));
+                        setRequeteAmis(data[0].lesrequeteamis.map((requeteami) => requeteami.pseudoAmi));
                     }
+
+                    console.log("data reponse get : ", data);
                 })
                 .catch(error => {
                     console.error('Erreur de la requête GET :', error);
@@ -166,14 +132,21 @@ const Accueil = ({ compte, setCompte }) => {
                         </div>
                         {pseudoDemandeAmis && <div className='attention form'>Ce pseudo n'existe pas</div>}
                         {pseudoNonValide && <div className='attention form'>Rentrer un pseudo valide</div>}
-                        {message && <div className='form'>{message}</div>}
+                        {message && (
+                            <div className="form">
+                                {statusRequete === 500 && <div className="serveurerreur">{message}</div>}
+                                {statusRequete === 400 && <div className="attention">{message}</div>}
+                                {statusRequete === 200 && <div className="valider">{message}</div>}
+                            </div>
+                        )}
                         <div className='form'>
                             <button type="submit" disabled={pseudoDemandeAmis || pseudoNonValide || message}>Ajouter un ami</button>
                         </div>
                     </form>
-                    {listeAmis && <ListeAmis listeAmis={listeAmis} />}
-                    {requeteAmis && <RequeteAmis requeteAmis={requeteAmis} />}
-                    {demandeAmis && <DemandeAmis demandeAmis={demandeAmis} compte={compte} setRechargementDonnees={setRechargementDonnees} rechargementDonnees={rechargementDonnees} />}
+                    {listeAmis.length > 0 && <ListeAmis listeAmis={listeAmis} />}
+                    {requeteAmis.length > 0 && <RequeteAmis requeteAmis={requeteAmis} />}
+                    {demandeAmis.length > 0 && <DemandeAmis demandeAmis={demandeAmis} compte={compte} setRechargementDonnees={setRechargementDonnees} rechargementDonnees={rechargementDonnees} />}
+                    <button onClick={() => console.log(requeteAmis)} title='consolelog' >consolelog</button>
                 </div>
             }
         </span>

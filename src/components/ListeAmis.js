@@ -11,10 +11,9 @@ const ListeAmis = ({ listeAmis }) => {
 
     useEffect(() => {
         const fetchAmisConnexion = async () => {
-            const amisListe = listeAmis.split(',');
             const amisAvecConnexion = [];
 
-            for (const ami of amisListe) {
+            for (const ami of listeAmis) {
                 try {
                     const response = await axios.get(`http://localhost:8080/api/utilisateurs?pseudo=${ami}`);
                     const etatConnexion = response.data[0].etatconnexion;
@@ -77,8 +76,8 @@ const ListeAmis = ({ listeAmis }) => {
 
         // Déclencher fetchAmisConnexion toutes les 2 secondes
         const intervalId = setInterval(() => {
-            fetchAmisConnexion();
         }, 2000);
+        fetchAmisConnexion();
 
         // Nettoyer l'intervalle lorsque le composant est démonté
         return () => clearInterval(intervalId);
@@ -92,7 +91,7 @@ const ListeAmis = ({ listeAmis }) => {
             {isLoading ? (
                 amisAvecConnexion.map(({ ami, icone, publique, listedamis, comptePublic }, index) => <Ami ami={ami} icone={icone} publique={publique} listedamis={listedamis} comptePublic={comptePublic} key={index} />
                 )) : (
-                listeAmis.split(',').map((ami, index) => (
+                listeAmis.map((ami, index) => (
                     <div key={index}>
                         <div className='form'>- {ami}</div>
                     </div>))

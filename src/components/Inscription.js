@@ -59,12 +59,14 @@ const Inscription = ({ setCompte, compte }) => {
             setCompte({
                 id: id,
                 pseudo: pseudo,
-                etatconnexion: "connecté"
+                etatconnexion: "connecté",
+                publique: false
             });
             console.log('Compte mis à jour :', {
                 id: id,
                 pseudo: pseudo,
-                etatconnexion: "connecté"
+                etatconnexion: "connecté",
+                publique: false
             });
         }
     }, [id, pseudo, setCompte]);
